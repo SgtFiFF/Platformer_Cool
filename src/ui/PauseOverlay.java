@@ -1,7 +1,7 @@
 package ui;
 
 import gamestates.GameState;
-import gamestates.Playing;
+//import gamestates.Playing;
 import gamestates.SecondPlaying;
 import main.Game;
 import utiz.LoadSave;
@@ -15,7 +15,6 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 public class PauseOverlay {
-    private Playing playing;
     private SecondPlaying secondplaying;
     private BufferedImage backgroundImg;
     private int bgX,bgY,bgW,bgH;
@@ -23,22 +22,14 @@ public class PauseOverlay {
     private UrmButton menuB, replayB, unpauseB;
     private VolumeButton volumeButton;
 
-    public PauseOverlay(Playing playing) {
-        this.playing = playing;
-        loadBackground();
-        createSoundButtons();
-        createUrmButtons();
-        createVolumeButtons();
+   public PauseOverlay(SecondPlaying secondPlaying) {
+       this.secondplaying = secondPlaying;
+       loadBackground();
+       createSoundButtons();
+       createUrmButtons();
+       createVolumeButtons();
 
-    }
-    public PauseOverlay(SecondPlaying secondPlaying) {
-        this.secondplaying = secondPlaying;
-        loadBackground();
-        createSoundButtons();
-        createUrmButtons();
-        createVolumeButtons();
-
-    }
+   }
 
     private void createVolumeButtons() {
         int vX = (int) (309 * Game.SCALE);
@@ -131,8 +122,11 @@ public class PauseOverlay {
                 sfxButton.setMousePressed(true);
         else if(isIn(e,menuB))
             menuB.setMousePressed(true);
-        else if(isIn(e,replayB))
+        else if(isIn(e,replayB)){
             replayB.setMousePressed(true);
+            secondplaying.resetAll();
+            secondplaying.unpauseGame();
+        }
         else if(isIn(e,unpauseB))
             unpauseB.setMousePressed(true);
         else if(isIn(e,volumeButton))
@@ -151,10 +145,8 @@ public class PauseOverlay {
             }
         }else if(isIn(e,menuB)) {
             if (menuB.isMousePressed()) {
-                if(GameState.state == GameState.PLAYING){
-                    playing.unpauseGame();
-                }
-                else {secondplaying.unpauseGame();
+                if(GameState.state == GameState.SECONDPLAYING || GameState.state == GameState.PLAYING){
+                    secondplaying.unpauseGame();
                 }
                 GameState.state = GameState.MENU;
             }
@@ -165,10 +157,7 @@ public class PauseOverlay {
         }
         else if(isIn(e,unpauseB)) {
             if (unpauseB.isMousePressed()) {
-                if(GameState.state == GameState.PLAYING){
-                    playing.unpauseGame();
-                }
-                else if(GameState.state == GameState.SECONDPLAYING){
+                if(GameState.state == GameState.SECONDPLAYING || GameState.state == GameState.PLAYING){
                     secondplaying.unpauseGame();
                 }
             }

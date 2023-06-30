@@ -18,11 +18,11 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
     public void mouseClicked(MouseEvent e) {
         switch (GameState.state) {
             case PLAYING:
-                gamePanel.getGame().getPlaying().mouseClicked(e);
-                break;
-            case SECONDPLAYING:
                 gamePanel.getGame().getSecondplaying().mouseClicked(e);
                 break;
+           case SECONDPLAYING:
+               gamePanel.getGame().getSecondplaying().mouseClicked(e);
+               break;
         }
 
     }
@@ -34,11 +34,11 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
                 gamePanel.getGame().getMenu().mousePressed(e);
                 break;
             case PLAYING:
-                gamePanel.getGame().getPlaying().mousePressed(e);
-                break;
-            case SECONDPLAYING:
                 gamePanel.getGame().getSecondplaying().mousePressed(e);
                 break;
+           case SECONDPLAYING:
+               gamePanel.getGame().getSecondplaying().mousePressed(e);
+               break;
 
         }
     }
@@ -50,7 +50,7 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
                 gamePanel.getGame().getMenu().mouseReleased(e);
                 break;
             case PLAYING:
-                gamePanel.getGame().getPlaying().mouseReleased(e);
+                gamePanel.getGame().getSecondplaying().mouseReleased(e);
                 break;
             case SECONDPLAYING:
                 gamePanel.getGame().getSecondplaying().mouseReleased(e);
@@ -73,7 +73,7 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
     public void mouseDragged(MouseEvent e) {
         switch (GameState.state) {
             case PLAYING:
-                gamePanel.getGame().getPlaying().mouseDragged(e);
+                gamePanel.getGame().getSecondplaying().mouseDragged(e);
                 break;
             case SECONDPLAYING:
                 gamePanel.getGame().getSecondplaying().mouseDragged(e);
@@ -88,11 +88,11 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
                 gamePanel.getGame().getMenu().mouseMoved(e);
                 break;
             case PLAYING:
-                gamePanel.getGame().getPlaying().mouseMoved(e);
-                break;
-            case SECONDPLAYING:
                 gamePanel.getGame().getSecondplaying().mouseMoved(e);
                 break;
+           case SECONDPLAYING:
+               gamePanel.getGame().getSecondplaying().mouseMoved(e);
+               break;
         }
     }
 }

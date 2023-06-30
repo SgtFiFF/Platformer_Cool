@@ -26,7 +26,7 @@ public class KeyboardInputs implements KeyListener {
                 gamePanel.getGame().getMenu().keyPressed(e);
                 break;
             case PLAYING:
-                gamePanel.getGame().getPlaying().keyPressed(e);
+                gamePanel.getGame().getSecondplaying().keyPressed(e);
 
             case SECONDPLAYING:
                 gamePanel.getGame().getSecondplaying().keyPressed(e);
@@ -40,7 +40,7 @@ public class KeyboardInputs implements KeyListener {
                 gamePanel.getGame().getMenu().keyReleased(e);
                 break;
             case PLAYING:
-                gamePanel.getGame().getPlaying().keyReleased(e);
+                gamePanel.getGame().getSecondplaying().keyReleased(e);
                 break;
             case SECONDPLAYING:
                 gamePanel.getGame().getSecondplaying().keyReleased(e);

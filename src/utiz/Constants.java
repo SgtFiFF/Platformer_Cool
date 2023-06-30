@@ -40,6 +40,24 @@ public class Constants {
             }
             return 0;
         }
+
+        public static int getMaxHealth(int enemy_type){
+            switch(enemy_type){
+                case STALKER:
+                    return 10;
+                default:
+                    return 10;
+            }
+        }
+
+        public static int getEnemyDmg(int enemy_type) {
+            switch(enemy_type){
+                case STALKER:
+                    return 2;
+                default:
+                    return 0;
+            }
+        }
     }
 
     public static class Background{
@@ -88,10 +106,9 @@ public class Constants {
     public static class PlayerConstants{
         public static final int IDLE = 0;
         public static final int FALL = 1;
-        public static final int RUNRIGHT = 2;
+        public static final int RUN = 2;
         public static final int JUMP = 3;
         public static final int ATK_1 = 4;
-        public static final int RUNLEFT = 5;
         public static final int DEATH = 6;
         public static final int DMG = 7;
 
@@ -105,8 +122,7 @@ public class Constants {
                     return 8;
                 case FALL:
                     return 3;
-                case RUNRIGHT:
-                case RUNLEFT:
+                case RUN:
                     return 6;
                 case JUMP:
                 case DEATH:

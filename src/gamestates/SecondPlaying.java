@@ -1,22 +1,37 @@
 package gamestates;
 
 import Levels.LevelManager;
+import entities.EnemyManager;
 import entities.Player;
-import entities.Second_Player;
 import main.Game;
+import ui.GameOverOverlay;
 import ui.PauseOverlay;
 import utiz.LoadSave;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Random;
+
+import static utiz.Constants.Background.*;
 
 public class SecondPlaying extends State implements Statemethods{
+
+    public static ArrayList<Player> players;
         private Player player;
-        private Second_Player secondPlayer;
+        private Player second_player;
         private LevelManager levelManager;
+        private EnemyManager enemyManager;
         private PauseOverlay pauseOverlay;
+        private GameOverOverlay gameOverOverlay;
         private boolean paused = false;
+
+    private BufferedImage backgroundImg, background_house, background_house_big;
+    private int[] housePos;
+    private Random rnd = new Random();
 
     private int xLvlOffset;
     private int leftBorder = (int)(0.2 * Game.GAME_WIDTH);
@@ -32,54 +47,94 @@ public class SecondPlaying extends State implements Statemethods{
     private int lvlTilesHeight = LoadSave.GetLevelData().length;
     private int maxTilesOffsetY = lvlTilesHeight - Game.TILES_IN_HEIGHT;
     private int maxLvlOffsetY = maxTilesOffsetY * Game.TILES_SIZE;
+    private boolean gameOver;
 
 
     public SecondPlaying(Game game) {
             super(game);
             initClasses();
+
+        backgroundImg = LoadSave.GetSpriteAtlas(LoadSave.LEVEL_BACKGROUND);
+        background_house = LoadSave.GetSpriteAtlas(LoadSave.BACKGROUND_HOUSE);
+        background_house_big = LoadSave.GetSpriteAtlas(LoadSave.BACKGROUND_HOUSE_BIG);
+        housePos = new int[8];
+        for(int i = 0; i < housePos.length; i++)
+            housePos[i] = (int )(90 * Game.SCALE )+ rnd.nextInt(140);
         }
-
         private void initClasses() {
+
+
+            players = new ArrayList<>();
             levelManager = new LevelManager(game);
-            player = new Player(200,200,(int) (64 * Game.SCALE),(int) (40 * Game.SCALE));
-            secondPlayer = new Second_Player(180,180,(int) (64 * Game.SCALE),(int) (40 * Game.SCALE));
-            player.loadLvlData(levelManager.getCurrentLevel().getLvlData());
-            secondPlayer.loadLvlData(levelManager.getCurrentLevel().getLvlData());
+            enemyManager = new EnemyManager(this);
+
+            player = new Player(200, 200, (int) (64 * Game.SCALE), (int) (40 * Game.SCALE), this);
+            second_player = new Player(200, 210, (int) (64 * Game.SCALE), (int) (40 * Game.SCALE), this);
+            players.add(player);
+            players.add(second_player);
+            for(Player p: players){
+            p.loadLvlData(levelManager.getCurrentLevel().getLvlData());
+            }
+
             pauseOverlay = new PauseOverlay(this);
-
-
+            gameOverOverlay = new GameOverOverlay(this);
         }
         @Override
         public void update() {
-            if(!paused) {
+            if(!paused && !gameOver) {
                 levelManager.update();
-                player.update();
-                secondPlayer.update();
+                enemyManager.update(levelManager.getCurrentLevel().getLvlData(), players);
+                if(GameState.state == GameState.PLAYING) {
+                    player.update();
+                }else if(GameState.state == GameState.SECONDPLAYING){
+                    for (Player p : players)
+                        p.update();
+                }
                 checkCloseToBorder();
-            }else {
-                pauseOverlay.update();
-            }
+
+            }else if(paused)
+                    pauseOverlay.update();
 
         }
         @Override
         public void draw(Graphics g) {
+            g.drawImage(backgroundImg, 0, 0, Game.GAME_WIDTH , Game.GAME_HEIGHT, null);
+            drawBackgroundObj(g);
+            enemyManager.draw(g, xLvlOffset, yLvlOffset);
             levelManager.draw(g, xLvlOffset, yLvlOffset);
-            player.render(g,xLvlOffset, yLvlOffset);
-            secondPlayer.render(g, xLvlOffset,yLvlOffset);
+
+            int i = 0;
+            if(GameState.state == GameState.SECONDPLAYING ){
+                for (Player p : players) {
+                    p.render(g, xLvlOffset, yLvlOffset, i);
+                    i++;
+                }
+            }
+            if(GameState.state == GameState.PLAYING ){
+                player.render(g, xLvlOffset, yLvlOffset, i);
+            }
+
             if(paused)
                 pauseOverlay.draw(g);
+
+            else if (gameOver) {
+                gameOverOverlay.draw(g);
+            }
         }
 
+    private void drawBackgroundObj(Graphics g) {
+        g.drawImage(background_house_big, 1300 - (int) (xLvlOffset * 0.3), 300 - (int) (yLvlOffset * 0.5), HOUSE_BIG_WIDTH, HOUSE_BIG_HEIGHT, null);
+        for( int i = 0; i < housePos.length; i++) {
+            g.drawImage(background_house, HOUSE_WIDTH * 4 * i - (int) (xLvlOffset * 0.6), housePos[i] - (int) (yLvlOffset * 0.6), HOUSE_WIDTH, HOUSE_HEIGHT, null);
+        }
+    }
     private void checkCloseToBorder() {
-        int playerX = (int) player.getHitbox().x;
-        int playerY = (int) player.getHitbox().y;
-        int diffX = playerX - xLvlOffset;
-        int diffY = playerY - yLvlOffset;
+        for(Player p: players) {
+            int playerX = (int) player.getHitbox().x;
+            int playerY = (int) player.getHitbox().y;
+            int diffX = playerX - xLvlOffset;
+            int diffY = playerY - yLvlOffset;
 
-        int secondPlayerY = (int) secondPlayer.getHitbox().y;
-        int secondPlayerX = (int) secondPlayer.getHitbox().x;
-        int secDiffX = secondPlayerX - xLvlOffset;
-        int secDiffY = secondPlayerY - yLvlOffset;
 
         //border checker
         if(diffX > rightBorder)
@@ -90,29 +145,7 @@ public class SecondPlaying extends State implements Statemethods{
             yLvlOffset += diffY - topBorder;
         else if( diffY > botBorder)
             yLvlOffset += diffY - botBorder;
-        else if(secDiffX > rightBorder)
-            xLvlOffset += diffX - leftBorder;
-        else if( secDiffX < leftBorder)
-            xLvlOffset += diffX - rightBorder;
-
-
-
-      // if (diffX > rightBorder && secDiffX -leftBorder <= 0) {
-      //     player.setCanMoveRight(false);
-      // }else if (diffX > rightBorder ) {
-      //     xLvlOffset += diffX - rightBorder;
-      //     player.setCanMoveRight(true);
-      // }
-      // if (diffX < leftBorder && secDiffX -rightBorder >= 0) {
-      //     player.setCanMoveLeft(false);
-      // }else if (diffX < leftBorder ) {
-      //     xLvlOffset += diffX - leftBorder;
-      //     player.setCanMoveLeft(true);
-
-      // }else
-      //     return;
-
-
+        }
 
         // check that we dont get too close to the end of the lvl
         if (xLvlOffset > maxLvlOffsetX)
@@ -124,20 +157,36 @@ public class SecondPlaying extends State implements Statemethods{
         else if (yLvlOffset < 0)
             yLvlOffset = 0;
 
+    }
+    public void resetAll(){
+        gameOver = false;
+        paused = false;
+        if(GameState.state == GameState.PLAYING){
+            player.resetAll();
+        }else {
+            player.resetAll();
+            second_player.resetAll();
+        }
+        enemyManager.resetAllEnemys();
 
+    }
+    public void setGameOver(boolean gameOver){
+        this.gameOver = gameOver;
+    }
+    public void enemyHitChecker(Rectangle2D.Float attackHitbox){
+        enemyManager.enemyHitChecker(attackHitbox);
     }
 
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if(e.getButton() == MouseEvent.BUTTON1)
-                secondPlayer.setAttack(true);
+
 
         }
         public void mouseDragged(MouseEvent e) {
-            if(paused)
-                pauseOverlay.mouseDragged(e);
-
+            if(!gameOver)
+                if(paused)
+                    pauseOverlay.mouseDragged(e);
         }
 
         @Override
@@ -163,12 +212,11 @@ public class SecondPlaying extends State implements Statemethods{
 
         @Override
         public void keyPressed(KeyEvent e) {
+            if(gameOver)
+                gameOverOverlay.keyPressed(e);
+                switch (e.getKeyCode()) {
+                    //General keys
 
-            switch (e.getKeyCode()) {
-                //General keys
-                case KeyEvent.VK_ESCAPE:
-                    paused = !paused;
-                    break;
                     //First Player
                 case KeyEvent.VK_W:
                     player.setJump(true);
@@ -185,52 +233,56 @@ public class SecondPlaying extends State implements Statemethods{
 
                     //Second Player
                 case KeyEvent.VK_UP:
-                    secondPlayer.setJump(true);
+                    second_player.setJump(true);
                     break;
                 case KeyEvent.VK_LEFT:
-                    secondPlayer.setLeft(true);
+                    second_player.setLeft(true);
                     break;
                 case KeyEvent.VK_RIGHT:
-                    secondPlayer.setRight(true);
+                    second_player.setRight(true);
                     break;
                 case KeyEvent.VK_NUMPAD0:
-                    secondPlayer.setAttack(true);
+                    second_player.setAttack(true);
                     break;
             }
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
-
-            switch (e.getKeyCode()) {
-                //First Player
-                case KeyEvent.VK_W:
-                    player.setJump(false);
-                    break;
-                case KeyEvent.VK_A:
-                    player.setLeft(false);
-                    break;
-                case KeyEvent.VK_D:
-                    player.setRight(false);
-                    break;
-                    //Second Player
-                case KeyEvent.VK_UP:
-                    secondPlayer.setJump(false);
-                    break;
-                case KeyEvent.VK_LEFT:
-                    secondPlayer.setLeft(false);
-                    break;
-                case KeyEvent.VK_RIGHT:
-                    secondPlayer.setRight(false);
-                    break;
-            }
+            if(!gameOver)
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_ESCAPE:
+                        paused = !paused;
+                        System.out.println("Button has been pressed " + paused);
+                        break;
+                    //First Player
+                    case KeyEvent.VK_W:
+                        player.setJump(false);
+                        break;
+                    case KeyEvent.VK_A:
+                        player.setLeft(false);
+                        break;
+                    case KeyEvent.VK_D:
+                        player.setRight(false);
+                        break;
+                        //Second Player
+                    case KeyEvent.VK_UP:
+                        second_player.setJump(false);
+                        break;
+                    case KeyEvent.VK_LEFT:
+                        second_player.setLeft(false);
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        second_player.setRight(false);
+                        break;
+                }
 
         }
     public void unpauseGame() {
         paused = false;
     }
-        public Second_Player getSecondPlayer() {
-            return secondPlayer;
+        public Player getSecondPlayer() {
+            return second_player;
         }
         public Player getPlayer() {
             return player;
@@ -238,7 +290,7 @@ public class SecondPlaying extends State implements Statemethods{
 
         public void  windowFocusLost(){
             player.resetDirBooleans();
-            secondPlayer.resetDirBooleans();
+            second_player.resetDirBooleans();
         }
 
     }

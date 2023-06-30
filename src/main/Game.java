@@ -2,7 +2,7 @@ package main;
 
 
 import gamestates.GameState;
-import gamestates.Playing;
+//import gamestates.Playing;
 import gamestates.Menu;
 import gamestates.SecondPlaying;
 
@@ -17,7 +17,7 @@ public class Game implements Runnable{
     private final int FPS_SET = 120;
     private  final int UPS_SET = 200;
 
-    private Playing playing;
+    //private Playing playing;
     private SecondPlaying secondplaying;
     private Menu menu;
 
@@ -31,20 +31,20 @@ public class Game implements Runnable{
     public final  static int GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
 
 
-
-
     public Game() {
         initClasses();
         gamePanel = new GamePanel(this);
         gameWindow = new GameWindow(gamePanel);
+        gamePanel.setFocusable(true); // Bugfix for Keyboardinputs idk why this works :D 
         gamePanel.requestFocus();
+
         startGameLoop();
     }
 
     private void initClasses() {
 
         menu = new Menu(this);
-        playing = new Playing(this);
+        //playing = new Playing(this);
         secondplaying = new SecondPlaying(this);
     }
 
@@ -59,11 +59,11 @@ public class Game implements Runnable{
                 menu.update();
                 break;
            case PLAYING:
-                playing.update();
+                secondplaying.update();
                 break;
            case SECONDPLAYING:
-               secondplaying.update();
-               break;
+                secondplaying.update();
+                break;
 
            case QUIT:
            default:
@@ -79,7 +79,7 @@ public class Game implements Runnable{
                 menu.draw(g);
                 break;
             case PLAYING:
-                playing.draw(g);
+                secondplaying.draw(g);
                 break;
             case SECONDPLAYING:
                 secondplaying.draw(g);
@@ -130,15 +130,19 @@ public class Game implements Runnable{
 
     public void  windowFocusLost(){
         if(GameState.state == GameState.PLAYING)
-            playing.getPlayer().resetDirBooleans();
+            secondplaying.getPlayer().resetDirBooleans();
+        else if(GameState.state == GameState.SECONDPLAYING) {
+            secondplaying.getPlayer().resetDirBooleans();
+            secondplaying.getSecondPlayer().resetDirBooleans();
+        }
     }
     public Menu getMenu() {
         return menu;
     }
-    public Playing getPlaying() {
-        return playing;
-    }
-    public SecondPlaying getSecondplaying(){
-        return secondplaying;
-    }
+   // public Playing getPlaying() {
+   //     return playing;
+   // }
+   public SecondPlaying getSecondplaying(){
+       return secondplaying;
+   }
 }

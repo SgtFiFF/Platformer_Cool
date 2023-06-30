@@ -3,6 +3,9 @@ package entities;
 
 import main.Game;
 
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+
 import static utiz.Constants.EnemyConstants.*;
 import static utiz.Constants.Directions.*;
 import static utiz.HelpMethods.*;
@@ -19,11 +22,25 @@ public abstract class Enemy extends Entity {
     protected int walkDir = LEFT;
     protected int tileY;
     protected float atkDistance = 2 * Game.TILES_SIZE;
+    protected int maxHealth;
+    protected int currentHealth;
+    protected boolean active = true;
+    protected boolean attackChecker;
 
     public Enemy(float x, float y, int width, int height, int enemyType) {
         super(x, y, width, height);
         this.enemyType = enemyType;
         initHitbox(x, y, width, height);
+        maxHealth = getMaxHealth(enemyType);
+        currentHealth = maxHealth;
+    }
+    public void hurt(int amount) {
+        currentHealth -= amount;
+        if(currentHealth <= 0) {
+            currentHealth = 0;
+            stateChange(DEAD);
+        }else
+            stateChange(HIT); //not gonna be in the finished game ... no time sry ... always onehit
     }
     protected void stateChange(int enemyState) {
         this.enemyState = enemyState;
@@ -63,30 +80,42 @@ public abstract class Enemy extends Entity {
 
         changeWalkDir();
     }
-    protected void turnToPlayer(Player player) {
-        if(player.hitbox.x > hitbox.x)
-            walkDir = RIGHT;
-        else
-            walkDir = LEFT;
+    protected void turnToPlayer(ArrayList<Player> players) {
+        for(Player player : players) {
+            if (player.hitbox.x > hitbox.x)
+                walkDir = RIGHT;
+            else
+                walkDir = LEFT;
+        }
     }
 
-    protected boolean playerVisibleCheck(int[][] lvlData, Player player) {
-        int PlayerTileY = (int) (player.getHitbox().y / Game.TILES_SIZE);
-        if (isPlayerInRange(player)) {
-            if(IsSightClear(lvlData, hitbox, player.hitbox, tileY))
-                return true;
+    protected boolean playerVisibleCheck(int[][] lvlData, ArrayList<Player> players) {
+        for (Player player : players) {
+            int playerTileY = (int) (player.getHitbox().y / Game.TILES_SIZE);
+            if (playerTileY == tileY)
+                if (isPlayerInRange(player)) {
+                    if (IsSightClear(lvlData, hitbox, player.hitbox, tileY))
+                        return true;
+                }
         }
-
         return false;
     }
-
     protected boolean isPlayerInRange(Player player) {
-        int absValue = (int) Math.abs(player.hitbox.x - hitbox.x);
-        return absValue <= atkDistance * 4;
+            int absValue = (int) Math.abs(player.hitbox.x - hitbox.x);
+            return absValue <= atkDistance * 4;
+
     }
     protected boolean playerInRangeToAtk(Player player) {
         int absValue = (int) Math.abs(player.hitbox.x - hitbox.x);
-        return absValue <= atkDistance ;
+        return absValue <= atkDistance;
+    }
+    protected void enemyHitChecker(Rectangle2D.Float attackHitbox, ArrayList<Player> players){
+        for (Player player : players){
+            if (attackHitbox.intersects(player.hitbox)) {
+                player.changeHealth((-getEnemyDmg(enemyType)));
+                attackChecker = true;
+            }
+        }
     }
 
 
@@ -98,10 +127,13 @@ public abstract class Enemy extends Entity {
             aniIndex ++;
             if(aniIndex >= GetSpriteAmount(enemyType, enemyState)) {
                 aniIndex = 0;
-            if(enemyState == ATTACK)
-                enemyState = IDLE;
-            }
 
+                switch (enemyState){
+                    case ATTACK,HIT -> enemyState = IDLE;
+                    case DEAD -> active = false;
+
+                }
+            }
         }
     }
 
@@ -118,5 +150,18 @@ public abstract class Enemy extends Entity {
     }
     public int getEnemyState(){
         return enemyState;
+    }
+    public boolean isActive(){
+        return active;
+    }
+
+    public void resetEnemy() {
+        hitbox.x = x;
+        hitbox.y = y;
+        firstUpdate = true;
+        currentHealth = maxHealth;
+        stateChange(IDLE);
+        active = true;
+        fallspeed = 0;
     }
 }

@@ -28,6 +28,7 @@ public class LoadSave {
     public static final String BACKGROUND_HOUSE = "backgr_house.png";
     public static final String BACKGROUND_HOUSE_BIG = "background_house_big.png";
     public static final String ENEMY_STALKER = "enemy_stalker_sprite.png";
+    public static final String STATUS_BAR = "status_bar.png";
 
     public static BufferedImage GetSpriteAtlas(String filename) {
         BufferedImage img = null;                           // null => sonst maybe stuck im try and catch

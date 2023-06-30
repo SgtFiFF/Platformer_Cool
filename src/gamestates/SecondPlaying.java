@@ -5,6 +5,7 @@ import entities.EnemyManager;
 import entities.Player;
 import main.Game;
 import ui.GameOverOverlay;
+import ui.LevelFinishoverlay;
 import ui.PauseOverlay;
 import utiz.LoadSave;
 
@@ -27,6 +28,7 @@ public class SecondPlaying extends State implements Statemethods{
         private EnemyManager enemyManager;
         private PauseOverlay pauseOverlay;
         private GameOverOverlay gameOverOverlay;
+        private LevelFinishoverlay levelFinishoverlay;
         private boolean paused = false;
 
     private BufferedImage backgroundImg, background_house, background_house_big;
@@ -34,20 +36,16 @@ public class SecondPlaying extends State implements Statemethods{
     private Random rnd = new Random();
 
     private int xLvlOffset;
+    private int yLvlOffset;
     private int leftBorder = (int)(0.2 * Game.GAME_WIDTH);
     private int rightBorder = (int)(0.8 * Game.GAME_WIDTH);
-    private int lvlTilesWide = LoadSave.GetLevelData()[0].length;
-    private int maxTilesOffset = lvlTilesWide - Game.TILES_IN_WIDTH;
-    private int maxLvlOffsetX = maxTilesOffset * Game.TILES_SIZE;
-
-    // testing
-    private int yLvlOffset;
     private int topBorder = (int)(0.2 * Game.GAME_HEIGHT);
     private int botBorder = (int)(0.8 * Game.GAME_HEIGHT);
-    private int lvlTilesHeight = LoadSave.GetLevelData().length;
-    private int maxTilesOffsetY = lvlTilesHeight - Game.TILES_IN_HEIGHT;
-    private int maxLvlOffsetY = maxTilesOffsetY * Game.TILES_SIZE;
+
+    private int maxLvlOffsetY;
+    private int maxLvlOffsetX;
     private boolean gameOver;
+    private boolean lvlFinished = false;
 
 
     public SecondPlaying(Game game) {
@@ -60,8 +58,27 @@ public class SecondPlaying extends State implements Statemethods{
         housePos = new int[8];
         for(int i = 0; i < housePos.length; i++)
             housePos[i] = (int )(90 * Game.SCALE )+ rnd.nextInt(140);
-        }
-        private void initClasses() {
+
+        calculateLvlOffset();
+        loadStartLevel();
+    }
+
+    public void loadNextLevel() {
+        resetAll();
+        levelManager.loadNextLevel();
+
+    }
+
+    private void loadStartLevel() {
+        enemyManager.loadEnemies(levelManager.getCurrentLevel());
+    }
+
+    private void calculateLvlOffset() {
+        maxLvlOffsetX = levelManager.getCurrentLevel().getLvlOffsetX();
+        maxLvlOffsetY = levelManager.getCurrentLevel().getLvlOffsetY();
+    }
+
+    private void initClasses() {
 
 
             players = new ArrayList<>();
@@ -78,22 +95,27 @@ public class SecondPlaying extends State implements Statemethods{
 
             pauseOverlay = new PauseOverlay(this);
             gameOverOverlay = new GameOverOverlay(this);
+            levelFinishoverlay = new LevelFinishoverlay(this);
         }
         @Override
         public void update() {
-            if(!paused && !gameOver) {
+            if(paused) {
+                pauseOverlay.update();
+            }else if(lvlFinished) {
+                levelFinishoverlay.update();
+            }else if(!gameOver){
                 levelManager.update();
                 enemyManager.update(levelManager.getCurrentLevel().getLvlData(), players);
-                if(GameState.state == GameState.PLAYING) {
+                if (GameState.state == GameState.PLAYING) {
                     player.update();
-                }else if(GameState.state == GameState.SECONDPLAYING){
+                } else if (GameState.state == GameState.SECONDPLAYING) {
                     for (Player p : players)
                         p.update();
                 }
                 checkCloseToBorder();
+            }
 
-            }else if(paused)
-                    pauseOverlay.update();
+
 
         }
         @Override
@@ -119,7 +141,10 @@ public class SecondPlaying extends State implements Statemethods{
 
             else if (gameOver) {
                 gameOverOverlay.draw(g);
+            }else if (lvlFinished){
+                levelFinishoverlay.draw(g);
             }
+
         }
 
     private void drawBackgroundObj(Graphics g) {
@@ -161,6 +186,7 @@ public class SecondPlaying extends State implements Statemethods{
     public void resetAll(){
         gameOver = false;
         paused = false;
+        lvlFinished = false;
         if(GameState.state == GameState.PLAYING){
             player.resetAll();
         }else {
@@ -178,121 +204,124 @@ public class SecondPlaying extends State implements Statemethods{
     }
 
 
-        @Override
-        public void mouseClicked(MouseEvent e) {
+    @Override
+    public void mouseClicked(MouseEvent e) {
 
 
-        }
-        public void mouseDragged(MouseEvent e) {
-            if(!gameOver)
-                if(paused)
-                    pauseOverlay.mouseDragged(e);
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
+    }
+    public void mouseDragged(MouseEvent e) {
+        if(!gameOver)
             if(paused)
+                pauseOverlay.mouseDragged(e);
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if(!gameOver) {
+            if (paused)
                 pauseOverlay.mousePressed(e);
-
+            else if(lvlFinished)
+                levelFinishoverlay.mousePressed(e);
         }
 
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            if(paused)
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if(!gameOver) {
+            if (paused)
                 pauseOverlay.mouseReleased(e);
-
+            else if(lvlFinished)
+                levelFinishoverlay.mouseReleased(e);
         }
+    }
 
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            if(paused)
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        if(!gameOver) {
+            if (paused)
                 pauseOverlay.mouseMoved(e);
-
+            else if(lvlFinished)
+                levelFinishoverlay.mouseMoved(e);
         }
+    }
 
-        @Override
-        public void keyPressed(KeyEvent e) {
-            if(gameOver)
-                gameOverOverlay.keyPressed(e);
-                switch (e.getKeyCode()) {
-                    //General keys
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if(gameOver)
+            gameOverOverlay.keyPressed(e);
+        switch (e.getKeyCode()) {
+            //General keys
 
-                    //First Player
+            //First Player
+            case KeyEvent.VK_W:
+                player.setJump(true);
+                break; case KeyEvent.VK_A: player.setLeft(true);
+                break; case KeyEvent.VK_D: player.setRight(true);
+                break; case KeyEvent.VK_SPACE: player.setAttack(true);
+                break;
+
+                //Second Player
+            case KeyEvent.VK_UP:
+                second_player.setJump(true);
+                break; case KeyEvent.VK_LEFT: second_player.setLeft(true);
+                break; case KeyEvent.VK_RIGHT: second_player.setRight(true);
+                break; case KeyEvent.VK_NUMPAD0: second_player.setAttack(true);
+                break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if(!gameOver)
+            switch (e.getKeyCode()) {
+            case KeyEvent.VK_ESCAPE:
+                paused = !paused;
+                System.out.println("Button has been pressed " + paused);
+                break;
+                //First Player
                 case KeyEvent.VK_W:
-                    player.setJump(true);
+                    player.setJump(false);
+                    break; case KeyEvent.VK_A: player.setLeft(false);
+                    break; case KeyEvent.VK_D: player.setRight(false);
                     break;
-                case KeyEvent.VK_A:
-                    player.setLeft(true);
-                    break;
-                case KeyEvent.VK_D:
-                    player.setRight(true);
-                    break;
-                case KeyEvent.VK_SPACE:
-                    player.setAttack(true);
-                    break;
-
                     //Second Player
                 case KeyEvent.VK_UP:
-                    second_player.setJump(true);
+                    second_player.setJump(false);
+                    break; case KeyEvent.VK_LEFT: second_player.setLeft(false);
+                    break; case KeyEvent.VK_RIGHT: second_player.setRight(false);
                     break;
-                case KeyEvent.VK_LEFT:
-                    second_player.setLeft(true);
-                    break;
-                case KeyEvent.VK_RIGHT:
-                    second_player.setRight(true);
-                    break;
-                case KeyEvent.VK_NUMPAD0:
-                    second_player.setAttack(true);
-                    break;
-            }
         }
 
-        @Override
-        public void keyReleased(KeyEvent e) {
-            if(!gameOver)
-                switch (e.getKeyCode()) {
-                    case KeyEvent.VK_ESCAPE:
-                        paused = !paused;
-                        System.out.println("Button has been pressed " + paused);
-                        break;
-                    //First Player
-                    case KeyEvent.VK_W:
-                        player.setJump(false);
-                        break;
-                    case KeyEvent.VK_A:
-                        player.setLeft(false);
-                        break;
-                    case KeyEvent.VK_D:
-                        player.setRight(false);
-                        break;
-                        //Second Player
-                    case KeyEvent.VK_UP:
-                        second_player.setJump(false);
-                        break;
-                    case KeyEvent.VK_LEFT:
-                        second_player.setLeft(false);
-                        break;
-                    case KeyEvent.VK_RIGHT:
-                        second_player.setRight(false);
-                        break;
-                }
+    }
 
-        }
+    public void setLevelCompleted(boolean levelFinished) {
+        this.lvlFinished = levelFinished;
+    }
+    public  void setMaxLevelOffset(int lvlOffsetX, int lvlOffsetY) {
+        this.maxLvlOffsetX = lvlOffsetX;
+        this.maxLvlOffsetY = lvlOffsetY;
+
+    }
+
     public void unpauseGame() {
         paused = false;
     }
-        public Player getSecondPlayer() {
-            return second_player;
-        }
-        public Player getPlayer() {
-            return player;
-        }
-
-        public void  windowFocusLost(){
-            player.resetDirBooleans();
-            second_player.resetDirBooleans();
-        }
-
+    public Player getSecondPlayer() {
+        return second_player;
     }
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void  windowFocusLost(){
+        player.resetDirBooleans();
+        second_player.resetDirBooleans();
+    }
+    public EnemyManager getEnemyManager() {
+        return enemyManager;
+    }
+
+}
 
 

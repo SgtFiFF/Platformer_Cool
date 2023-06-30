@@ -1,10 +1,12 @@
 package Levels;
 
+import gamestates.GameState;
 import main.Game;
 import utiz.LoadSave;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 import static main.Game.LVL_SPRITE_GR;
 
@@ -12,12 +14,35 @@ public class LevelManager {
 
     private Game game;
     private BufferedImage[] levelSprite;
-    private Level levelOne;
+    private ArrayList<Level> levels;
+    private  int lvlIndex = 0;
 
     public LevelManager(Game game) {
         this.game = game;
         importOutsideSprites();
-        levelOne = new Level(LoadSave.GetLevelData());
+        levels = new ArrayList<>();
+        buildAllLevels();
+    }
+
+    public void loadNextLevel() {
+        lvlIndex++;
+        if(lvlIndex >= levels.size()) {
+            lvlIndex = 0;
+            System.out.println("no more levels for u to explore");
+            GameState.state = GameState.MENU;
+        }
+        Level newLevel = levels.get(lvlIndex);
+        game.getSecondplaying().getEnemyManager().loadEnemies(newLevel);
+        game.getSecondplaying().getPlayer().loadLvlData(newLevel.getLvlData());
+        game.getSecondplaying().getSecondPlayer().loadLvlData(newLevel.getLvlData());
+        game.getSecondplaying().setMaxLevelOffset(newLevel.getLvlOffsetX(), newLevel.getLvlOffsetY());
+
+    }
+
+    private void buildAllLevels() {
+        BufferedImage[] allLevels = LoadSave.GetAllLevels();
+        for(BufferedImage img : allLevels)
+            levels.add(new Level(img));
     }
 
     private void importOutsideSprites() {
@@ -31,9 +56,9 @@ public class LevelManager {
     }
 
     public void draw(Graphics g, int xlvloffset, int yLvlOffset) {
-        for( int j = 0; j < levelOne.getLvlData().length; j++)
-            for(int i = 0; i < levelOne.getLvlData()[0].length; i++){
-                int index = levelOne.getSpriteIndex(i, j);
+        for( int j = 0; j < levels.get(lvlIndex).getLvlData().length; j++)
+            for(int i = 0; i < levels.get(lvlIndex).getLvlData()[0].length; i++){
+                int index = levels.get(lvlIndex).getSpriteIndex(i, j);
                 g.drawImage(levelSprite[index], Game.TILES_SIZE * i - xlvloffset,Game.TILES_SIZE * j - yLvlOffset, Game.TILES_SIZE, Game.TILES_SIZE,null);
             }
 
@@ -44,6 +69,10 @@ public class LevelManager {
     }
 
     public Level getCurrentLevel() { //Getter for current Level we are in => usable for Collision
-        return levelOne;
+        return levels.get(lvlIndex);
+    }
+
+    public int getAmountOfLevels() {
+        return levels.size();
     }
 }

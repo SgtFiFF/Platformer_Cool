@@ -5,6 +5,7 @@ import gamestates.GameState;
 //import gamestates.Playing;
 import gamestates.Menu;
 import gamestates.SecondPlaying;
+import utiz.LoadSave;
 
 import java.awt.*;
 
@@ -32,10 +33,11 @@ public class Game implements Runnable{
 
 
     public Game() {
+
         initClasses();
         gamePanel = new GamePanel(this);
         gameWindow = new GameWindow(gamePanel);
-        gamePanel.setFocusable(true); // Bugfix for Keyboardinputs idk why this works :D 
+        gamePanel.setFocusable(true); // Bugfix for Keyboardinputs
         gamePanel.requestFocus();
 
         startGameLoop();

@@ -1,7 +1,16 @@
 package utiz;
 
+import entities.Stalker;
 import main.Game;
+
+import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.nio.Buffer;
+import java.util.ArrayList;
+
+import static main.Game.LVL_SPRITE_GR;
+import static utiz.Constants.EnemyConstants.STALKER;
 
 public class HelpMethods {
 
@@ -98,6 +107,31 @@ public class HelpMethods {
 
         }
 
+    }
+    public static int[][] GetLevelData(BufferedImage img) {
+        int[][] lvlData = new int[img.getHeight()][img.getWidth()];
+        for(int j =0; j < img.getHeight(); j++)
+            for(int i = 0; i < img.getWidth(); i++) {
+                Color color = new Color(img.getRGB(i, j));
+                int value = color.getRed();
+                if(value >= LVL_SPRITE_GR-1)                     //so you don't get error if ur file has more than 48 red colors
+                    value = 0;
+                lvlData[j][i] = value;
+            }
+        return lvlData;
+
+    }
+
+    public static ArrayList<Stalker> GetStalker(BufferedImage img){
+        ArrayList<Stalker> list = new ArrayList<>();
+        for(int j =0; j < img.getHeight(); j++)
+            for(int i = 0; i < img.getWidth(); i++) {
+                Color color = new Color(img.getRGB(i, j));
+                int value = color.getGreen();
+                if(value == STALKER)
+                    list.add(new Stalker(i * Game.TILES_SIZE, j * Game.TILES_SIZE));
+            }
+        return list;
     }
 
 

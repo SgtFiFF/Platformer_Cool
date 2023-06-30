@@ -1,6 +1,7 @@
 package entities;
 
 //import gamestates.Playing;
+import Levels.Level;
 import gamestates.SecondPlaying;
 import utiz.LoadSave;
 
@@ -26,17 +27,21 @@ public class EnemyManager {
     public EnemyManager(SecondPlaying secondPlaying) {
         this.secondPlaying = secondPlaying;
         loadEnemyImgs();
-        addEnemies();
     }
 
-    private void addEnemies() {
-        stalkerAll = LoadSave.GetStalker();
+    public void loadEnemies(Level level) {
+        stalkerAll = level.getStalkers();
     }
 
     public void update(int[][] lvlData, ArrayList<Player> players) {
-            for (Stalker s : stalkerAll)
-                if (s.isActive())
+        boolean isAnyActive = false;
+        for (Stalker s : stalkerAll)
+                if (s.isActive()){
                     s.update(lvlData, players);
+                    isAnyActive = true;
+                }
+        if(!isAnyActive)
+            secondPlaying.setLevelCompleted(true);
 
     }
 

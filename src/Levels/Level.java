@@ -2,10 +2,14 @@ package Levels;
 
 import entities.Stalker;
 import main.Game;
+import objects.GameContainer;
+import objects.Potion;
+import utiz.HelpMethods;
 import utiz.LoadSave;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static utiz.HelpMethods.GetLevelData;
 import static utiz.HelpMethods.GetStalker;
@@ -15,6 +19,8 @@ public class Level {
     private BufferedImage img;
     private int[][] lvlData;
     private ArrayList<Stalker> stalkers;
+    private ArrayList<Potion> potions;
+    private ArrayList<GameContainer> containers;
     private int lvlTilesWide ;
     private int lvlTilesHeight ;
     private int maxTilesOffset ;
@@ -26,8 +32,18 @@ public class Level {
         this.img = img;
         createLevelData();
         createEnemies();
+        createPotions();
+        createContainer();
         calculateLevelOffset();
 
+    }
+
+    private void createContainer() {
+        containers = HelpMethods.GetContainers(img);
+    }
+
+    private void createPotions() {
+        potions = HelpMethods.GetPotions(img);
     }
 
     private void calculateLevelOffset() {
@@ -65,5 +81,11 @@ public class Level {
     }
     public ArrayList<Stalker> getStalkers() {
         return stalkers;
+    }
+    public ArrayList<Potion> getPotions() {
+        return potions;
+    }
+    public ArrayList<GameContainer> getContainers() {
+        return containers;
     }
 }

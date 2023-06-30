@@ -32,6 +32,9 @@ public class LoadSave {
     public static final String ENEMY_STALKER = "enemy_stalker_sprite.png";
     public static final String STATUS_BAR = "status_bar.png";
     public static final String LEVEL_FINISHED = "level_complete_screen.png";
+    public static final String POTION_ATLAS = "potions_sprites.png";
+    public static final String CONTAINER_ATLAS = "objects_sprites.png";
+
 
     public static BufferedImage GetSpriteAtlas(String filename) {
         BufferedImage img = null;                           // null => sonst maybe stuck im try and catch

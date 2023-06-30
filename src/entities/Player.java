@@ -4,6 +4,7 @@ import gamestates.GameState;
 //import gamestates.Playing;
 import gamestates.SecondPlaying;
 import main.Game;
+import utiz.Constants;
 import utiz.LoadSave;
 
 import static utiz.HelpMethods.*;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 
 
 public class Player extends Entity {
-    private int animationTick, animationIndex, animationSpeed = 20; //Animation Speed
+    private int animationTick, animationIndex; //Animation constants
     private BufferedImage[][] animations;
     private int playerAction = IDLE;
     public boolean moving = false;
@@ -28,9 +29,8 @@ public class Player extends Entity {
     private int[][] lvlData;                                    //stores the level data for collision
     private float xDrawOffset = 18 * Game.SCALE;                //Offset der Hitbox in X
     private float yDrawOffset = 8 * Game.SCALE;                 //Offset der Hitbox in Y
-    // Gravity and Jumping
+    //Jumping
     private float airSpeed = 0f;                                // stores the playerspeed in midair
-    private float gravity = 0.02f * Game.SCALE;                  // how fast the player will fall TODO: Jumpboost stat
     private float jumpSpeed = -2.25f * Game.SCALE;              //speed of the Jump
     private float fallSpeedAfterCollision = 0.5f * Game.SCALE;  //fall speed after collision detection
     private boolean inAir = false;                              // self explaining
@@ -56,17 +56,9 @@ public class Player extends Entity {
     private int flipX = 0;
     private int flipW = 1;
     private boolean attackChecker;
-    //private Playing playing;
     private SecondPlaying secondPlaying;
 
 
-   // public Player(float x, float y, int width, int height, Playing playing) {
-   //     super(x, y, width, height);
-   //     this.playing = playing;
-   //     loadAnimations();
-   //     initHitbox(x, y, (int) (30 * Game.SCALE), (int) (30 * Game.SCALE)); //Einstellung der Hitbox
-   //     initAttackHitbox();
-   // }
     public Player(float x, float y, int width, int height, SecondPlaying secondPlaying) {
         super(x, y, width, height);
         this.secondPlaying = secondPlaying;
@@ -75,6 +67,7 @@ public class Player extends Entity {
         initAttackHitbox();
     }
 
+    //initialising the Hitbox of the Player
     private void initAttackHitbox(){
         attackHitbox = new Rectangle2D.Float(x, y,(int) (40 * Game.SCALE),(int)(30 * Game.SCALE));
     }
@@ -90,11 +83,17 @@ public class Player extends Entity {
         }
         updateAttackHitbox();
         updatePos();
+        if(moving)
+            checkPotionTouched();
         if(atk)
             checkAttack();
         updateAnimation();
         setAnimation();
 
+    }
+
+    private void checkPotionTouched() {
+        secondPlaying.checkPotionTouched(hitbox);
     }
 
     private void checkAttack() {
@@ -104,9 +103,11 @@ public class Player extends Entity {
         switch (GameState.state){
             case PLAYING:
                 secondPlaying.enemyHitChecker(attackHitbox);
+                secondPlaying.checkObjectHit(attackHitbox);
                 break;
             case SECONDPLAYING:
                 secondPlaying.enemyHitChecker(attackHitbox);
+                secondPlaying.checkObjectHit(attackHitbox);
                 break;
 
         }
@@ -155,7 +156,7 @@ public class Player extends Entity {
     private void updateAnimation() {
 
         animationTick++;
-        if (animationTick >= animationSpeed) {
+        if (animationTick >= Constants.ANI_SPEED) {
             animationTick = 0;
             animationIndex++;
 
@@ -163,9 +164,6 @@ public class Player extends Entity {
                 animationIndex = 0;
                 atk = false;
                 attackChecker = false;
-                if (animationSpeed != 20) {
-                    animationSpeed = 20;
-                }
             }
         }
     }
@@ -236,7 +234,6 @@ public class Player extends Entity {
 
         if (jump) {
             jump();
-            animationSpeed = 20;
         }
         if (!inAir)
             if ((!left && !right) || (right && left))
@@ -260,7 +257,7 @@ public class Player extends Entity {
         if (inAir) {
             if (CanMoveHere(hitbox.x, hitbox.y + airSpeed, hitbox.width, hitbox.height, lvlData)) {
                 hitbox.y += airSpeed;
-                airSpeed += gravity;
+                airSpeed += Constants.GRAVITY;
                 updateXPos(xSpeed);
             } else {
                 hitbox.y = GetEntityYPosUnderRoofAboveFloor(hitbox, airSpeed);

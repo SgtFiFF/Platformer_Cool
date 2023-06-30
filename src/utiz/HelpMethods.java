@@ -2,6 +2,8 @@ package utiz;
 
 import entities.Stalker;
 import main.Game;
+import objects.GameContainer;
+import objects.Potion;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 
 import static main.Game.LVL_SPRITE_GR;
 import static utiz.Constants.EnemyConstants.STALKER;
+import static utiz.Constants.ObjectConstants.*;
 
 public class HelpMethods {
 
@@ -134,6 +137,28 @@ public class HelpMethods {
         return list;
     }
 
+    public static ArrayList<Potion> GetPotions(BufferedImage img){
+        ArrayList<Potion> list = new ArrayList<>();
+        for(int j =0; j < img.getHeight(); j++)
+            for(int i = 0; i < img.getWidth(); i++) {
+                Color color = new Color(img.getRGB(i, j));
+                int value = color.getBlue();
+                if(value == RED_POTION || value == BLUE_POTION)
+                    list.add(new Potion(i * Game.TILES_SIZE, j * Game.TILES_SIZE, value));
+            }
+        return list;
+    }
+    public static ArrayList<GameContainer> GetContainers(BufferedImage img){
+        ArrayList<GameContainer> list = new ArrayList<>();
+        for(int j =0; j < img.getHeight(); j++)
+            for(int i = 0; i < img.getWidth(); i++) {
+                Color color = new Color(img.getRGB(i, j));
+                int value = color.getBlue();
+                if(value == BOX || value == BARREL)
+                    list.add(new GameContainer(i * Game.TILES_SIZE, j * Game.TILES_SIZE, value));
+            }
+        return list;
+    }
 
 }
 

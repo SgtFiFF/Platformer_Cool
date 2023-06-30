@@ -4,6 +4,7 @@ import Levels.LevelManager;
 import entities.EnemyManager;
 import entities.Player;
 import main.Game;
+import objects.ObjectManager;
 import ui.GameOverOverlay;
 import ui.LevelFinishoverlay;
 import ui.PauseOverlay;
@@ -26,6 +27,7 @@ public class SecondPlaying extends State implements Statemethods{
         private Player second_player;
         private LevelManager levelManager;
         private EnemyManager enemyManager;
+        private ObjectManager objectManager;
         private PauseOverlay pauseOverlay;
         private GameOverOverlay gameOverOverlay;
         private LevelFinishoverlay levelFinishoverlay;
@@ -71,19 +73,21 @@ public class SecondPlaying extends State implements Statemethods{
 
     private void loadStartLevel() {
         enemyManager.loadEnemies(levelManager.getCurrentLevel());
+        objectManager.loadObjects(levelManager.getCurrentLevel());
     }
 
     private void calculateLvlOffset() {
         maxLvlOffsetX = levelManager.getCurrentLevel().getLvlOffsetX();
         maxLvlOffsetY = levelManager.getCurrentLevel().getLvlOffsetY();
     }
-
+    //initialises all the necessary classes for the player with its respective numbers
     private void initClasses() {
 
-
+            //array list for 2 players :)
             players = new ArrayList<>();
             levelManager = new LevelManager(game);
             enemyManager = new EnemyManager(this);
+            objectManager = new ObjectManager(this);
 
             player = new Player(200, 200, (int) (64 * Game.SCALE), (int) (40 * Game.SCALE), this);
             second_player = new Player(200, 210, (int) (64 * Game.SCALE), (int) (40 * Game.SCALE), this);
@@ -105,6 +109,7 @@ public class SecondPlaying extends State implements Statemethods{
                 levelFinishoverlay.update();
             }else if(!gameOver){
                 levelManager.update();
+                objectManager.update();
                 enemyManager.update(levelManager.getCurrentLevel().getLvlData(), players);
                 if (GameState.state == GameState.PLAYING) {
                     player.update();
@@ -122,8 +127,10 @@ public class SecondPlaying extends State implements Statemethods{
         public void draw(Graphics g) {
             g.drawImage(backgroundImg, 0, 0, Game.GAME_WIDTH , Game.GAME_HEIGHT, null);
             drawBackgroundObj(g);
-            enemyManager.draw(g, xLvlOffset, yLvlOffset);
             levelManager.draw(g, xLvlOffset, yLvlOffset);
+            enemyManager.draw(g, xLvlOffset, yLvlOffset);
+            objectManager.draw(g, xLvlOffset, yLvlOffset);
+
 
             int i = 0;
             if(GameState.state == GameState.SECONDPLAYING ){
@@ -194,13 +201,21 @@ public class SecondPlaying extends State implements Statemethods{
             second_player.resetAll();
         }
         enemyManager.resetAllEnemys();
+        objectManager.resetAllObjects();
 
     }
     public void setGameOver(boolean gameOver){
         this.gameOver = gameOver;
     }
+
     public void enemyHitChecker(Rectangle2D.Float attackHitbox){
         enemyManager.enemyHitChecker(attackHitbox);
+    }
+    public void checkPotionTouched(Rectangle2D.Float hitbox) {
+        objectManager.checkObjectTouched(hitbox);
+    }
+    public void checkObjectHit(Rectangle2D.Float attackHitbox){
+        objectManager.checkObjectHit(attackHitbox);
     }
 
 
@@ -320,6 +335,10 @@ public class SecondPlaying extends State implements Statemethods{
     }
     public EnemyManager getEnemyManager() {
         return enemyManager;
+    }
+
+    public ObjectManager getObjectManager() {
+        return objectManager;
     }
 
 }
